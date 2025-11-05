@@ -3,7 +3,7 @@ CONFIG = {
     "driver_path": "",  # để trống nếu dùng selenium-manager tự động
 
     # Thời gian chờ (giây)
-    "timeout": 20,
+    "timeout": 60,
 
     # Chạy ẩn hay không
     "headless": False,  # đặt False để thấy Chrome bật lên

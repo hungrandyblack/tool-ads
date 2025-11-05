@@ -28,7 +28,6 @@ def log_print(log_widget, text):
     log_widget.see(tk.END)
 
 def run_tasks_threaded(csv_file, concurrency, log_widget):
-    """Chạy các worker thực sự bằng ThreadPoolExecutor."""
     if not Path(csv_file).exists():
         log_print(log_widget, f"❌ Không tìm thấy file: {csv_file}")
         return
@@ -38,21 +37,26 @@ def run_tasks_threaded(csv_file, concurrency, log_widget):
         log_print(log_widget, "❌ Danh sách tài khoản rỗng.")
         return
 
+    log_print(log_widget, f"Loaded accounts: {len(accounts)}")
+    for i, (email, pwd, proxy) in enumerate(accounts):
+        log_print(log_widget, f"  #{i} {email} proxy={proxy}")
+
     tasks = []
     for i, (email, pwd, proxy) in enumerate(accounts):
         tasks.append((i, email, pwd, CONFIG, proxy))
 
-    actual_concurrency = min(concurrency, len(tasks))
+    # Chọn chiến lược:
+    # actual_concurrency = min(concurrency, len(tasks))   # hiện tại — giới hạn theo số task
+    actual_concurrency = concurrency                      # ép theo input của bạn
+
     log_print(log_widget, f"🚀 Bắt đầu chạy {len(tasks)} tài khoản với concurrency = {actual_concurrency}\n")
 
-    # ThreadPoolExecutor để chạy worker_task (mỗi worker khởi Chrome riêng)
     with ThreadPoolExecutor(max_workers=actual_concurrency) as ex:
         future_to_task = {ex.submit(worker_task, task): task for task in tasks}
         for future in as_completed(future_to_task):
             task = future_to_task[future]
             try:
                 res = future.result()
-                # res có thể là dict hoặc string - in cho dễ đọc
                 log_print(log_widget, f"{res}")
             except Exception as e:
                 log_print(log_widget, f"[ERR] task {task[0]} raised: {e}")
